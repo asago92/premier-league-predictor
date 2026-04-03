@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premier League Predictor - Monte Carlo Simulation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: #718096;
+      font-size: 1rem;
+    }
+    
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 768px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .soccer-field {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin: 0 auto;
+    }
+    
+    .field-circle {
+      position: absolute;
+      inset: 0;
+      border: 2px dashed #a0aec0;
+      border-radius: 50%;
+    }
+    
+    .center-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 80px;
+      height: 80px;
+      transform: translate(-50%, -50%);
+      border: 2px solid #e2e8f0;
+      border-radius: 50%;
+    }
+    
+    .center-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      transform: translate(-50%, -50%);
+      background: #a0aec0;
+      border-radius: 50%;
+    }
+    
+    .timer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Courier New', monospace;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #e53e3e;
+      text-shadow: 0 0 10px rgba(229, 62, 62, 0.3);
+    }
+    
+    .team-badge {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .scoreboard {
+      background: #2d3748;
+      border-radius: 12px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 20px;
+    }
+    
+    .team-score {
+      text-align: center;
+    }
+    
+    .team-name {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    
+    .score-digit {
+      background: #1a202c;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #e53e3e;
+      min-width: 60px;
+    }
+    
+    .vs {
+      color: #718096;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .btn-icon:hover {
+      border-color: #cbd5e0;
+      background: #f7fafc;
+    }
+    
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: bold;
+      color: #1a202c;
+      margin-bottom: 16px;
+    }
+    
+    .team-selector {
+      margin-bottom: 16px;
+    }
+    
+    .team-selector label {
+      display: block;
+      font-size: 14px;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+    
+    select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    select:hover, select:focus {
+      border-color: #4299e1;
+      outline: none;
+    }
+    
+    .slider-container {
+      margin-bottom: 24px;
+    }
+    
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .slider-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .calculated-value {
+      font-size: 12px;
+      color: #4299e1;
+    }
+    
+    .probability-display {
+      background: #2d3748;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    
+    .slider-wrapper {
+      position: relative;
+      height: 40px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .slider-track {
+      position: absolute;
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+    }
+    
+    .slider-fill {
+      position: absolute;
+      height: 8px;
+      border-radius: 4px;
+      transition: width 0.2s;
+    }
+    
+    .slider-marker {
+      position: absolute;
+      width: 3px;
+      height: 16px;
+      background: #718096;
+      border-radius: 2px;
+      transform: translateX(-50%);
+    }
+    
+    input[type="range"] {
+      position: absolute;
+      width: 100%;
+      height: 40px;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 10;
+    }
+    
+    .slider-thumb {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      background: white;
+      border: 4px solid;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transform: translateX(-50%);
+      pointer-events: none;
+      transition: transform 0.15s;
+    }
+    
+    .team-label {
+      text-align: center;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 8px;
+    }
+    
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.125rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-primary:hover {
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .results {
+      margin-top: 24px;
+    }
+    
+    .result-bar {
+      margin-bottom: 16px;
+    }
+    
+    .result-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    
+    .result-track {
+      height: 24px;
+      background: #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .result-fill {
+      height: 100%;
+      border-radius: 12px;
+      transition: width 0.5s ease-out;
+    }
+    
+    .expected-goals {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .expected-goal-item {
+      text-align: center;
+    }
+    
+    .expected-goal-value {
+      font-size: 1.75rem;
+      font-weight: bold;
+    }
+    
+    .expected-goal-label {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .data-info {
+      margin-top: 24px;
+    }
+    
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    @media (max-width: 600px) {
+      .data-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    .data-item {
+      text-align: center;
+    }
+    
+    .data-label {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .data-value {
+      font-weight: bold;
+      color: #1a202c;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Premier League Predictor</h1>
+      <p class="subtitle">Monte Carlo Simulation for Match Outcome Prediction</p>
+    </header>
+    
+    <div class="main-grid">
+      <!-- Left Column - Visualization -->
+      <div class="card">
+        <div class="soccer-field">
+          <div class="field-circle"></div>
+          <div class="center-circle"></div>
+          <div class="center-dot"></div>
+          <div class="timer">90:00</div>
+          <div id="teamBadges"></div>
+        </div>
+        
+        <div class="scoreboard">
+          <div class="team-score">
+            <div class="team-name" id="homeTeamName">MAN CITY</div>
+            <div class="score-digit" id="homeScore">00</div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="team-score">
+            <div class="team-name" id="awayTeamName">ARSENAL</div>
+            <div class="score-digit" id="awayScore">00</div>
+          </div>
+        </div>
+        
+        <div class="controls">
+          <button class="btn-icon" onclick="swapTeams()" title="Swap Teams">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l-6 6M3 8V3h5"/>
+            </svg>
+          </button>
+          <button class="btn-icon" onclick="randomizeTeams()" title="Randomize">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Right Column - Controls -->
+      <div>
+        <div class="card">
+          <h3 class="section-title">Select Teams</h3>
+          
+          <div class="team-selector">
+            <label>Home Team</label>
+            <select id="homeSelect" onchange="updateHomeTeam(this.value)"></select>
+          </div>
+          
+          <div class="team-selector">
+            <label>Away Team</label>
+            <select id="awaySelect" onchange="updateAwayTeam(this.value)"></select>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top: 16px;">
+          <h3 class="section-title">Goal Probability per Minute</h3>
+          <p style="font-size: 12px; color: #718096; margin-bottom: 16px;">
+            Calculated from historical data. Adjust to simulate different scenarios.
+          </p>
+          
+          <!-- Home Team Slider -->
+          <div class="slider-container">
+            <div class="slider-header">
+              <span class="slider-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4299e1" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <path d="M8 8h8M8 12h8M8 16h5"/>
+                </svg>
+                Calculated: <span id="homeCalculated">0.027</span>
+              </span>
+              <div class="probability-display" id="homeProbDisplay">0.027</div>
+            </div>
+            <div class="slider-wrapper">
+              <div class="slider-track"></div>
+              <div class="slider-fill" id="homeSliderFill" style="width: 27%; background: #6CABDD;"></div>
+              <div class="slider-marker" id="homeMarker" style="left: 27%;"></div>
+              <input type="range" id="homeSlider" min="0" max="0.1" step="0.001" value="0.027" oninput="updateHomeProbability(this.value)">
+              <div class="slider-thumb" id="homeThumb" style="left: 27%; border-color: #6CABDD;"></div>
+            </div>
+            <div class="team-label" id="homeLabel" style="color: #6CABDD;">MANCHESTER CITY</div>
+          </div>
+          
+          <!-- Away Team Slider -->
+          <div class="slider-container">
+            <div class="slider-header">
+              <span class="slider-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4299e1" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <path d="M8 8h8M8 12h8M8 16h5"/>
+                </svg>
+                Calculated: <span id="awayCalculated">0.014</span>
+              </span>
+              <div class="probability-display" id="awayProbDisplay">0.014</div>
+            </div>
+            <div class="slider-wrapper">
+              <div class="slider-track"></div>
+              <div class="slider-fill" id="awaySliderFill" style="width: 14%; background: #EF0107;"></div>
+              <div class="slider-marker" id="awayMarker" style="left: 14%;"></div>
+              <input type="range" id="awaySlider" min="0" max="0.1" step="0.001" value="0.014" oninput="updateAwayProbability(this.value)">
+              <div class="slider-thumb" id="awayThumb" style="left: 14%; border-color: #EF0107;"></div>
+            </div>
+            <div class="team-label" id="awayLabel" style="color: #EF0107;">ARSENAL</div>
+          </div>
+          
+          <button class="btn-primary" id="runBtn" onclick="runSimulation()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            Run Simulation
+          </button>
+          
+          <div class="results" id="results" style="display: none;">
+            <h3 class="section-title">Match Prediction</h3>
+            
+            <div class="result-bar">
+              <div class="result-label">
+                <span id="homeWinLabel">Man City Win</span>
+                <span id="homeWinPct">0%</span>
+              </div>
+              <div class="result-track">
+                <div class="result-fill" id="homeWinBar" style="width: 0%; background: #6CABDD;"></div>
+              </div>
+            </div>
+            
+            <div class="result-bar">
+              <div class="result-label">
+                <span>Draw</span>
+                <span id="drawPct">0%</span>
+              </div>
+              <div class="result-track">
+                <div class="result-fill" id="drawBar" style="width: 0%; background: #718096;"></div>
+              </div>
+            </div>
+            
+            <div class="result-bar">
+              <div class="result-label">
+                <span id="awayWinLabel">Arsenal Win</span>
+                <span id="awayWinPct">0%</span>
+              </div>
+              <div class="result-track">
+                <div class="result-fill" id="awayWinBar" style="width: 0%; background: #EF0107;"></div>
+              </div>
+            </div>
+            
+            <div class="expected-goals">
+              <div class="expected-goal-item">
+                <div class="expected-goal-value" id="homeExpGoals" style="color: #6CABDD;">0.00</div>
+                <div class="expected-goal-label" id="homeExpLabel">Man City</div>
+              </div>
+              <div class="expected-goal-item">
+                <div class="expected-goal-value" style="color: #718096;">-</div>
+              </div>
+              <div class="expected-goal-item">
+                <div class="expected-goal-value" id="awayExpGoals" style="color: #EF0107;">0.00</div>
+                <div class="expected-goal-label" id="awayExpLabel">Arsenal</div>
+              </div>
+            </div>
+            
+            <p style="text-align: center; font-size: 12px; color: #a0aec0; margin-top: 16px;">
+              Based on <span id="simCount">10,000</span> Monte Carlo simulations
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card data-info">
+      <h3 class="section-title">Data Source</h3>
+      <div class="data-grid">
+        <div class="data-item">
+          <div class="data-label">Seasons</div>
+          <div class="data-value">11 seasons</div>
+          <div style="font-size: 11px; color: #a0aec0;">2014-2025</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label">Teams</div>
+          <div class="data-value">20 teams</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label">Avg Goals/Match</div>
+          <div class="data-value">2.75</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label">Calculation</div>
+          <div class="data-value" style="color: #4299e1;">GF/MP/90</div>
+          <div style="font-size: 11px; color: #a0aec0;">Probability/min</div>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>Using Monte Carlo simulation with Poisson distribution for goal scoring prediction.</p>
+      <p style="margin-top: 8px; font-size: 12px;">
+        Probability = (Goals For / Matches Played) / 90 minutes
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // Team data with calculated probabilities from historical data
+    // Probability per minute = (Average Goals per Match) / 90
+    const TEAMS = {
+      'Manchester City': { short: 'MCI', color: '#6CABDD', home: 0.0269, away: 0.0182 },
+      'Arsenal': { short: 'ARS', color: '#EF0107', home: 0.0259, away: 0.0141 },
+      'Aston Villa': { short: 'AVL', color: '#95BFE5', home: 0.0182, away: 0.0157 },
+      'Bournemouth': { short: 'BOU', color: '#DA291C', home: 0.0176, away: 0.0192 },
+      'Brentford': { short: 'BRE', color: '#E30613', home: 0.0213, away: 0.0121 },
+      'Brighton': { short: 'BHA', color: '#0057B8', home: 0.0192, away: 0.0130 },
+      'Burnley': { short: 'BUR', color: '#6C1D45', home: 0.0111, away: 0.0131 },
+      'Chelsea': { short: 'CHE', color: '#034694', home: 0.0172, away: 0.0204 },
+      'Crystal Palace': { short: 'CRY', color: '#1B458F', home: 0.0102, away: 0.0131 },
+      'Everton': { short: 'EVE', color: '#003399', home: 0.0139, away: 0.0101 },
+      'Fulham': { short: 'FUL', color: '#000000', home: 0.0194, away: 0.0111 },
+      'Leeds United': { short: 'LEE', color: '#ffffff', home: 0.0192, away: 0.0111 },
+      'Liverpool': { short: 'LIV', color: '#C8102E', home: 0.0162, away: 0.0176 },
+      'Newcastle United': { short: 'NEW', color: '#241F20', home: 0.0204, away: 0.0101 },
+      'Nottingham Forest': { short: 'NFO', color: '#DD0000', home: 0.0121, away: 0.0102 },
+      'Sunderland': { short: 'SUN', color: '#EB172B', home: 0.0182, away: 0.0056 },
+      'Tottenham Hotspur': { short: 'TOT', color: '#132257', home: 0.0131, away: 0.0185 },
+      'West Ham United': { short: 'WHU', color: '#7A263A', home: 0.0148, away: 0.0111 },
+      'Wolves': { short: 'WOL', color: '#FDB913', home: 0.0101, away: 0.0046 },
+    };
+    
+    let homeTeam = 'Manchester City';
+    let awayTeam = 'Arsenal';
+    let homeProbability = TEAMS[homeTeam].home;
+    let awayProbability = TEAMS[awayTeam].away;
+    
+    // Initialize
+    function init() {
+      populateSelects();
+      updateUI();
+      renderTeamBadges();
+    }
+    
+    function populateSelects() {
+      const homeSelect = document.getElementById('homeSelect');
+      const awaySelect = document.getElementById('awaySelect');
+      
+      Object.keys(TEAMS).forEach(team => {
+        homeSelect.add(new Option(team, team));
+        awaySelect.add(new Option(team, team));
+      });
+      
+      homeSelect.value = homeTeam;
+      awaySelect.value = awayTeam;
+    }
+    
+    function updateHomeTeam(team) {
+      homeTeam = team;
+      homeProbability = TEAMS[team].home;
+      updateUI();
+    }
+    
+    function updateAwayTeam(team) {
+      awayTeam = team;
+      awayProbability = TEAMS[team].away;
+      updateUI();
+    }
+    
+    function updateHomeProbability(val) {
+      homeProbability = parseFloat(val);
+      updateSliderUI('home', homeProbability, TEAMS[homeTeam].home, TEAMS[homeTeam].color);
+    }
+    
+    function updateAwayProbability(val) {
+      awayProbability = parseFloat(val);
+      updateSliderUI('away', awayProbability, TEAMS[awayTeam].away, TEAMS[awayTeam].color);
+    }
+    
+    function updateSliderUI(type, value, calculated, color) {
+      const pct = (value / 0.1) * 100;
+      const calcPct = (calculated / 0.1) * 100;
+      
+      document.getElementById(type + 'ProbDisplay').textContent = parseFloat(value).toFixed(3);
+      document.getElementById(type + 'SliderFill').style.width = pct + '%';
+      document.getElementById(type + 'SliderFill').style.background = color;
+      document.getElementById(type + 'Marker').style.left = calcPct + '%';
+      document.getElementById(type + 'Thumb').style.left = pct + '%';
+      document.getElementById(type + 'Thumb').style.borderColor = color;
+      document.getElementById(type + 'Label').style.color = color;
+      document.getElementById(type + 'Label').textContent = (type === 'home' ? homeTeam : awayTeam).toUpperCase();
+    }
+    
+    function updateUI() {
+      document.getElementById('homeSelect').value = homeTeam;
+      document.getElementById('awaySelect').value = awayTeam;
+      
+      document.getElementById('homeTeamName').textContent = TEAMS[homeTeam].short;
+      document.getElementById('homeTeamName').style.color = TEAMS[homeTeam].color;
+      document.getElementById('awayTeamName').textContent = TEAMS[awayTeam].short;
+      document.getElementById('awayTeamName').style.color = TEAMS[awayTeam].color;
+      
+      document.getElementById('homeCalculated').textContent = TEAMS[homeTeam].home.toFixed(3);
+      document.getElementById('awayCalculated').textContent = TEAMS[awayTeam].away.toFixed(3);
+      
+      document.getElementById('homeSlider').value = homeProbability;
+      document.getElementById('awaySlider').value = awayProbability;
+      
+      updateSliderUI('home', homeProbability, TEAMS[homeTeam].home, TEAMS[homeTeam].color);
+      updateSliderUI('away', awayProbability, TEAMS[awayTeam].away, TEAMS[awayTeam].color);
+      
+      renderTeamBadges();
+    }
+    
+    function renderTeamBadges() {
+      const container = document.getElementById('teamBadges');
+      container.innerHTML = '';
+      
+      const homeColor = TEAMS[homeTeam].color;
+      const awayColor = TEAMS[awayTeam].color;
+      
+      // Position badges around the circle
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
+        const x = 50 + 42 * Math.cos(angle);
+        const y = 50 + 42 * Math.sin(angle);
+        const isHome = i % 2 === 0;
+        
+        const badge = document.createElement('div');
+        badge.className = 'team-badge';
+        badge.style.left = x + '%';
+        badge.style.top = y + '%';
+        badge.style.transform = 'translate(-50%, -50%)';
+        badge.style.backgroundColor = isHome ? homeColor : awayColor;
+        badge.textContent = isHome ? TEAMS[homeTeam].short.charAt(0) : TEAMS[awayTeam].short.charAt(0);
+        container.appendChild(badge);
+      }
+    }
+    
+    function swapTeams() {
+      const temp = homeTeam;
+      homeTeam = awayTeam;
+      awayTeam = temp;
+      
+      homeProbability = TEAMS[homeTeam].home;
+      awayProbability = TEAMS[awayTeam].away;
+      
+      updateUI();
+      document.getElementById('results').style.display = 'none';
+    }
+    
+    function randomizeTeams() {
+      const teams = Object.keys(TEAMS);
+      homeTeam = teams[Math.floor(Math.random() * teams.length)];
+      do {
+        awayTeam = teams[Math.floor(Math.random() * teams.length)];
+      } while (awayTeam === homeTeam);
+      
+      homeProbability = TEAMS[homeTeam].home;
+      awayProbability = TEAMS[awayTeam].away;
+      
+      updateUI();
+      document.getElementById('results').style.display = 'none';
+    }
+    
+    // Poisson distribution
+    function poissonRandom(lambda) {
+      const L = Math.exp(-lambda);
+      let k = 0;
+      let p = 1;
+      
+      do {
+        k++;
+        p *= Math.random();
+      } while (p > L);
+      
+      return k - 1;
+    }
+    
+    // Run simulation
+    function runSimulation() {
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Simulating...';
+      
+      setTimeout(() => {
+        const iterations = 10000;
+        let homeWins = 0, awayWins = 0, draws = 0;
+        let totalHomeGoals = 0, totalAwayGoals = 0;
+        
+        // Expected goals based on probability per minute
+        const homeExpectedGoals = homeProbability * 90;
+        const awayExpectedGoals = awayProbability * 90;
+        
+        for (let i = 0; i < iterations; i++) {
+          const homeGoals = poissonRandom(homeExpectedGoals);
+          const awayGoals = poissonRandom(awayExpectedGoals);
+          
+          if (homeGoals > awayGoals) homeWins++;
+          else if (awayGoals > homeGoals) awayWins++;
+          else draws++;
+          
+          totalHomeGoals += homeGoals;
+          totalAwayGoals += awayGoals;
+        }
+        
+        // Update results
+        document.getElementById('homeWinLabel').textContent = homeTeam + ' Win';
+        document.getElementById('awayWinLabel').textContent = awayTeam + ' Win';
+        document.getElementById('homeExpLabel').textContent = homeTeam;
+        document.getElementById('awayExpLabel').textContent = awayTeam;
+        
+        const homeWinPct = (homeWins / iterations * 100).toFixed(1);
+        const awayWinPct = (awayWins / iterations * 100).toFixed(1);
+        const drawPct = (draws / iterations * 100).toFixed(1);
+        
+        document.getElementById('homeWinPct').textContent = homeWinPct + '%';
+        document.getElementById('awayWinPct').textContent = awayWinPct + '%';
+        document.getElementById('drawPct').textContent = drawPct + '%';
+        
+        document.getElementById('homeWinBar').style.width = Math.max(homeWinPct, 5) + '%';
+        document.getElementById('awayWinBar').style.width = Math.max(awayWinPct, 5) + '%';
+        document.getElementById('drawBar').style.width = Math.max(drawPct, 5) + '%';
+        
+        document.getElementById('homeWinBar').style.background = TEAMS[homeTeam].color;
+        document.getElementById('awayWinBar').style.background = TEAMS[awayTeam].color;
+        
+        document.getElementById('homeExpGoals').textContent = (totalHomeGoals / iterations).toFixed(2);
+        document.getElementById('awayExpGoals').textContent = (totalAwayGoals / iterations).toFixed(2);
+        document.getElementById('homeExpGoals').style.color = TEAMS[homeTeam].color;
+        document.getElementById('awayExpGoals').style.color = TEAMS[awayTeam].color;
+        
+        // Update sample score
+        const sampleHome = poissonRandom(homeExpectedGoals);
+        const sampleAway = poissonRandom(awayExpectedGoals);
+        document.getElementById('homeScore').textContent = sampleHome.toString().padStart(2, '0');
+        document.getElementById('awayScore').textContent = sampleAway.toString().padStart(2, '0');
+        
+        document.getElementById('results').style.display = 'block';
+        
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Run Simulation`;
+      }, 100);
+    }
+    
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>
