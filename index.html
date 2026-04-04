@@ -61,14 +61,14 @@
     
     .soccer-field {
       position: relative;
-      width: 280px;
-      height: 280px;
+      width: 300px;
+      height: 300px;
       margin: 0 auto;
     }
     
     .field-circle {
       position: absolute;
-      inset: 0;
+      inset: 20px;
       border: 2px dashed #a0aec0;
       border-radius: 50%;
     }
@@ -113,13 +113,74 @@
       height: 36px;
       border-radius: 50%;
       border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
       color: white;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      z-index: 2;
+    }
+
+    .team-badge:hover {
+      transform: translate(-50%, -50%) scale(1.25);
+      z-index: 10;
+    }
+
+    .team-badge .goal-minute {
+      display: none;
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #4a5568;
+      background: white;
+      padding: 1px 5px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      white-space: nowrap;
+      font-family: 'Courier New', monospace;
+    }
+
+    .team-badge:hover .goal-minute {
+      display: block;
+    }
+
+    .minute-tick {
+      position: absolute;
+      width: 2px;
+      height: 8px;
+      background: #cbd5e0;
+      transform-origin: center center;
+    }
+
+    .minute-tick.major {
+      height: 12px;
+      width: 2px;
+      background: #718096;
+    }
+
+    .minute-label {
+      position: absolute;
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+      color: #a0aec0;
+      transform: translate(-50%, -50%);
+      font-weight: 600;
+    }
+
+    .no-goals-msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, calc(-50% + 30px));
+      font-size: 11px;
+      color: #a0aec0;
+      text-align: center;
+      pointer-events: none;
     }
     
     .scoreboard {
@@ -465,6 +526,7 @@
       <div class="card">
         <div class="soccer-field">
           <div class="field-circle"></div>
+          <div id="minuteTicks"></div>
           <div class="center-circle"></div>
           <div class="center-dot"></div>
           <div class="timer">90:00</div>
@@ -690,6 +752,7 @@
     // Initialize
     function init() {
       populateSelects();
+      renderMinuteTicks();
       updateUI();
       renderTeamBadges();
     }
@@ -764,6 +827,41 @@
       renderTeamBadges();
     }
     
+    function renderMinuteTicks() {
+      const container = document.getElementById('minuteTicks');
+      container.innerHTML = '';
+      const cx = 150, cy = 150, radius = 130;
+      
+      // Render tick marks every 5 minutes, labels every 15 minutes
+      for (let m = 0; m <= 90; m += 5) {
+        const angle = (m / 90) * Math.PI * 2 - Math.PI / 2;
+        const isMajor = m % 15 === 0;
+        
+        // Tick mark
+        const tickLen = isMajor ? 10 : 6;
+        const x1 = cx + (radius - 1) * Math.cos(angle);
+        const y1 = cy + (radius - 1) * Math.sin(angle);
+        const x2 = cx + (radius - 1 - tickLen) * Math.cos(angle);
+        const y2 = cy + (radius - 1 - tickLen) * Math.sin(angle);
+        
+        const tick = document.createElement('div');
+        tick.style.cssText = `position:absolute; width:${isMajor ? 2 : 1}px; height:${tickLen}px; background:${isMajor ? '#718096' : '#cbd5e0'}; left:${cx}px; top:${cy}px; transform-origin: 0 0; transform: rotate(${Math.atan2(y1 - cy, x1 - cx) + Math.PI/2}rad) translate(-50%, -${radius - 1}px);`;
+        container.appendChild(tick);
+        
+        // Label for major ticks
+        if (isMajor) {
+          const lx = cx + (radius + 13) * Math.cos(angle);
+          const ly = cy + (radius + 13) * Math.sin(angle);
+          const label = document.createElement('div');
+          label.className = 'minute-label';
+          label.style.left = lx + 'px';
+          label.style.top = ly + 'px';
+          label.textContent = m + "'";
+          container.appendChild(label);
+        }
+      }
+    }
+    
     function renderTeamBadges() {
       const container = document.getElementById('teamBadges');
       container.innerHTML = '';
@@ -771,21 +869,68 @@
       const homeColor = TEAMS[homeTeam].color;
       const awayColor = TEAMS[awayTeam].color;
       
-      // Position badges around the circle
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
-        const x = 50 + 42 * Math.cos(angle);
-        const y = 50 + 42 * Math.sin(angle);
-        const isHome = i % 2 === 0;
+      // Use Poisson to generate predicted goal counts
+      const homeExpected = homeProbability * 90;
+      const awayExpected = awayProbability * 90;
+      const homeGoalCount = poissonRandom(homeExpected);
+      const awayGoalCount = poissonRandom(awayExpected);
+      
+      // Generate random goal times, sorted
+      const homeGoalTimes = Array.from({length: homeGoalCount}, () => Math.random() * 90).sort((a, b) => a - b);
+      const awayGoalTimes = Array.from({length: awayGoalCount}, () => Math.random() * 90).sort((a, b) => a - b);
+      
+      const cx = 50; // center percentage
+      const cy = 50;
+      const radiusPct = 43.3; // match inset circle
+      
+      // Helper to create a badge at a given minute
+      function createBadge(minute, color, shortName, teamName, index) {
+        const angle = (minute / 90) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + radiusPct * Math.cos(angle);
+        const y = cy + radiusPct * Math.sin(angle);
         
         const badge = document.createElement('div');
         badge.className = 'team-badge';
         badge.style.left = x + '%';
         badge.style.top = y + '%';
         badge.style.transform = 'translate(-50%, -50%)';
-        badge.style.backgroundColor = isHome ? homeColor : awayColor;
-        badge.textContent = isHome ? TEAMS[homeTeam].short.charAt(0) : TEAMS[awayTeam].short.charAt(0);
+        badge.style.backgroundColor = color;
+        badge.style.opacity = '0';
+        badge.textContent = shortName.charAt(0);
+        
+        const tooltip = document.createElement('span');
+        tooltip.className = 'goal-minute';
+        tooltip.textContent = Math.round(minute) + "' " + shortName;
+        badge.appendChild(tooltip);
+        
         container.appendChild(badge);
+        
+        // Animate in with stagger
+        setTimeout(() => {
+          badge.style.opacity = '1';
+        }, 80 * index);
+      }
+      
+      // Render home goals
+      homeGoalTimes.forEach((t, i) => {
+        createBadge(t, homeColor, TEAMS[homeTeam].short, homeTeam, i);
+      });
+      
+      // Render away goals
+      awayGoalTimes.forEach((t, i) => {
+        createBadge(t, awayColor, TEAMS[awayTeam].short, awayTeam, i + homeGoalCount);
+      });
+      
+      // Update the scoreboard preview
+      document.getElementById('homeScore').textContent = String(homeGoalCount).padStart(2, '0');
+      document.getElementById('awayScore').textContent = String(awayGoalCount).padStart(2, '0');
+      
+      // If no goals, show a message
+      if (homeGoalCount === 0 && awayGoalCount === 0) {
+        const msg = document.createElement('div');
+        msg.className = 'no-goals-msg';
+        msg.textContent = '0 – 0';
+        container.appendChild(msg);
       }
     }
     
@@ -882,11 +1027,8 @@
         document.getElementById('homeExpGoals').style.color = TEAMS[homeTeam].color;
         document.getElementById('awayExpGoals').style.color = TEAMS[awayTeam].color;
         
-        // Update sample score
-        const sampleHome = poissonRandom(homeExpectedGoals);
-        const sampleAway = poissonRandom(awayExpectedGoals);
-        document.getElementById('homeScore').textContent = sampleHome.toString().padStart(2, '0');
-        document.getElementById('awayScore').textContent = sampleAway.toString().padStart(2, '0');
+        // Re-render badges for a fresh sample prediction
+        renderTeamBadges();
         
         document.getElementById('results').style.display = 'block';
         
