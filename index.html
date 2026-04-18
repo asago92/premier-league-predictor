@@ -693,7 +693,7 @@
         <div class="data-item">
           <div class="data-label">Seasons</div>
           <div class="data-value">11 seasons</div>
-          <div style="font-size: 11px; color: #a0aec0;">2014-2025</div>
+          <div style="font-size: 11px; color: #a0aec0;">2014-2026</div>
         </div>
         <div class="data-item">
           <div class="data-label">Teams</div>
@@ -722,26 +722,29 @@
   <script>
     // Team data with calculated probabilities from historical data
     // Probability per minute = (Average Goals per Match) / 90
+    // Updated from EPL CSV data (2014–2026, 11 seasons)
+    // Probability per minute = (Total GF / Total MP) / 90
     const TEAMS = {
-      'Manchester City': { short: 'MCI', color: '#6CABDD', home: 0.0269, away: 0.0182 },
-      'Arsenal': { short: 'ARS', color: '#EF0107', home: 0.0259, away: 0.0141 },
-      'Aston Villa': { short: 'AVL', color: '#95BFE5', home: 0.0182, away: 0.0157 },
-      'Bournemouth': { short: 'BOU', color: '#DA291C', home: 0.0176, away: 0.0192 },
-      'Brentford': { short: 'BRE', color: '#E30613', home: 0.0213, away: 0.0121 },
-      'Brighton': { short: 'BHA', color: '#0057B8', home: 0.0192, away: 0.0130 },
-      'Burnley': { short: 'BUR', color: '#6C1D45', home: 0.0111, away: 0.0131 },
-      'Chelsea': { short: 'CHE', color: '#034694', home: 0.0172, away: 0.0204 },
-      'Crystal Palace': { short: 'CRY', color: '#1B458F', home: 0.0102, away: 0.0131 },
-      'Everton': { short: 'EVE', color: '#003399', home: 0.0139, away: 0.0101 },
-      'Fulham': { short: 'FUL', color: '#000000', home: 0.0194, away: 0.0111 },
-      'Leeds United': { short: 'LEE', color: '#ffffff', home: 0.0192, away: 0.0111 },
-      'Liverpool': { short: 'LIV', color: '#C8102E', home: 0.0162, away: 0.0176 },
-      'Newcastle United': { short: 'NEW', color: '#241F20', home: 0.0204, away: 0.0101 },
-      'Nottingham Forest': { short: 'NFO', color: '#DD0000', home: 0.0121, away: 0.0102 },
-      'Sunderland': { short: 'SUN', color: '#EB172B', home: 0.0182, away: 0.0056 },
-      'Tottenham Hotspur': { short: 'TOT', color: '#132257', home: 0.0131, away: 0.0185 },
-      'West Ham United': { short: 'WHU', color: '#7A263A', home: 0.0148, away: 0.0111 },
-      'Wolves': { short: 'WOL', color: '#FDB913', home: 0.0101, away: 0.0046 },
+      'Manchester City': { short: 'MCI', color: '#6CABDD', home: 0.0295, away: 0.0222 },
+      'Arsenal': { short: 'ARS', color: '#EF0107', home: 0.0234, away: 0.0182 },
+      'Aston Villa': { short: 'AVL', color: '#95BFE5', home: 0.0165, away: 0.0122 },
+      'Bournemouth': { short: 'BOU', color: '#DA291C', home: 0.0151, away: 0.0138 },
+      'Brentford': { short: 'BRE', color: '#E30613', home: 0.0186, away: 0.0147 },
+      'Brighton': { short: 'BHA', color: '#0057B8', home: 0.0149, away: 0.0133 },
+      'Burnley': { short: 'BUR', color: '#6C1D45', home: 0.0112, away: 0.0107 },
+      'Chelsea': { short: 'CHE', color: '#034694', home: 0.0203, away: 0.0180 },
+      'Crystal Palace': { short: 'CRY', color: '#1B458F', home: 0.0134, away: 0.0131 },
+      'Everton': { short: 'EVE', color: '#003399', home: 0.0159, away: 0.0116 },
+      'Fulham': { short: 'FUL', color: '#000000', home: 0.0147, away: 0.0121 },
+      'Leeds United': { short: 'LEE', color: '#FFCD00', home: 0.0145, away: 0.0146 },
+      'Liverpool': { short: 'LIV', color: '#C8102E', home: 0.0249, away: 0.0201 },
+      'Manchester Utd': { short: 'MUN', color: '#DA291C', home: 0.0196, away: 0.0155 },
+      'Newcastle United': { short: 'NEW', color: '#241F20', home: 0.0177, away: 0.0124 },
+      'Nottingham Forest': { short: 'NFO', color: '#DD0000', home: 0.0143, away: 0.0126 },
+      'Sunderland': { short: 'SUN', color: '#EB172B', home: 0.0119, away: 0.0096 },
+      'Tottenham Hotspur': { short: 'TOT', color: '#132257', home: 0.0209, away: 0.0186 },
+      'West Ham United': { short: 'WHU', color: '#7A263A', home: 0.0163, away: 0.0140 },
+      'Wolves': { short: 'WOL', color: '#FDB913', home: 0.0138, away: 0.0109 },
     };
     
     let homeTeam = 'Manchester City';
