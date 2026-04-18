@@ -509,6 +509,145 @@
       font-size: 14px;
     }
     
+    .heatmap-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.125rem;
+      font-weight: bold;
+      color: #1a202c;
+    }
+    
+    .heatmap-toggle:hover {
+      background: #f7fafc;
+    }
+    
+    .heatmap-toggle .chevron {
+      transition: transform 0.3s ease;
+      color: #a0aec0;
+    }
+    
+    .heatmap-toggle.open .chevron {
+      transform: rotate(180deg);
+    }
+    
+    .heatmap-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    
+    .heatmap-body.open {
+      max-height: 1200px;
+    }
+    
+    .heatmap-content {
+      padding: 0 24px 24px;
+    }
+    
+    .heatmap-sort-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .sort-btn {
+      padding: 6px 14px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #4a5568;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    .sort-btn:hover {
+      border-color: #cbd5e0;
+      background: #f7fafc;
+    }
+    
+    .sort-btn.active {
+      border-color: #4299e1;
+      background: #ebf8ff;
+      color: #2b6cb0;
+    }
+    
+    .heatmap-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 2px;
+    }
+    
+    .heatmap-table th {
+      font-size: 11px;
+      font-weight: 600;
+      color: #718096;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    
+    .heatmap-table th:first-child {
+      text-align: left;
+      padding-left: 8px;
+      width: 140px;
+    }
+    
+    .heatmap-table td {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 4px;
+      border-radius: 4px;
+      transition: transform 0.15s;
+    }
+    
+    .heatmap-table td:hover:not(:first-child):not(:last-child) {
+      transform: scale(1.15);
+      z-index: 2;
+      position: relative;
+    }
+    
+    .heatmap-table td:first-child {
+      text-align: left;
+      padding-left: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2d3748;
+      background: none !important;
+    }
+    
+    .heatmap-table td:last-child {
+      font-weight: 800;
+      color: #1a202c;
+      background: none !important;
+      font-size: 13px;
+    }
+    
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .heatmap-legend-bar {
+      display: flex;
+      height: 10px;
+      border-radius: 3px;
+      overflow: hidden;
+      width: 120px;
+    }
+    
     .hidden {
       display: none;
     }
@@ -707,6 +846,54 @@
           <div class="data-label">Calculation</div>
           <div class="data-value" style="color: #4299e1;">GF/MP/90</div>
           <div style="font-size: 11px; color: #a0aec0;">Probability/min</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Goal Timing Heatmap -->
+    <div class="card" style="margin-top: 24px; padding: 0; overflow: hidden;">
+      <button class="heatmap-toggle" id="heatmapToggle" onclick="toggleHeatmap()">
+        <span>Goal Timing by Team (2025/26)</span>
+        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      <div class="heatmap-body" id="heatmapBody">
+        <div class="heatmap-content">
+          <div class="heatmap-sort-bar">
+            <button class="sort-btn active" data-sort="alpha" onclick="sortHeatmap('alpha', this)">A → Z</button>
+            <button class="sort-btn" data-sort="late" onclick="sortHeatmap('late', this)">Most late goals</button>
+            <button class="sort-btn" data-sort="early" onclick="sortHeatmap('early', this)">Most early goals</button>
+            <button class="sort-btn" data-sort="total" onclick="sortHeatmap('total', this)">Most total goals</button>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="heatmap-table" id="heatmapTable">
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>0–15'</th>
+                  <th>16–30'</th>
+                  <th>31–45'</th>
+                  <th>46–60'</th>
+                  <th>61–75'</th>
+                  <th>76–90'</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="heatmapTbody"></tbody>
+            </table>
+          </div>
+          <div class="heatmap-legend">
+            <span>Fewer</span>
+            <div class="heatmap-legend-bar">
+              <div style="flex:1; background: #ebf8ff;"></div>
+              <div style="flex:1; background: #90cdf4;"></div>
+              <div style="flex:1; background: #4299e1;"></div>
+              <div style="flex:1; background: #2b6cb0;"></div>
+              <div style="flex:1; background: #1a365d;"></div>
+            </div>
+            <span>More goals</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1062,8 +1249,79 @@
       }, 100);
     }
     
+    // Heatmap
+    const HEATMAP_COLORS = ['#ebf8ff','#bee3f8','#90cdf4','#63b3ed','#4299e1','#3182ce','#2b6cb0','#2c5282','#1a365d'];
+    
+    function getHeatColor(val, max) {
+      const t = max > 0 ? val / max : 0;
+      const i = Math.min(Math.round(t * (HEATMAP_COLORS.length - 1)), HEATMAP_COLORS.length - 1);
+      return HEATMAP_COLORS[i];
+    }
+    
+    function getHeatTextColor(val, max) {
+      return (max > 0 && val / max > 0.45) ? '#ebf8ff' : '#1a365d';
+    }
+    
+    function getHeatmapData() {
+      return Object.entries(TEAMS).map(([name, t]) => ({
+        name,
+        short: t.short,
+        bins: t.bins,
+        total: t.bins.reduce((a, b) => a + b, 0)
+      }));
+    }
+    
+    function renderHeatmap(sortType) {
+      let data = getHeatmapData();
+      if (sortType === 'alpha') data.sort((a, b) => a.name.localeCompare(b.name));
+      else if (sortType === 'late') data.sort((a, b) => b.bins[5] - a.bins[5] || b.total - a.total);
+      else if (sortType === 'early') data.sort((a, b) => b.bins[0] - a.bins[0] || b.total - a.total);
+      else if (sortType === 'total') data.sort((a, b) => b.total - a.total);
+      
+      const allVals = data.flatMap(d => d.bins);
+      const maxVal = Math.max(...allVals);
+      
+      const tbody = document.getElementById('heatmapTbody');
+      tbody.innerHTML = '';
+      
+      data.forEach(team => {
+        const tr = document.createElement('tr');
+        const nameTd = document.createElement('td');
+        nameTd.textContent = team.name;
+        tr.appendChild(nameTd);
+        
+        team.bins.forEach(v => {
+          const td = document.createElement('td');
+          td.textContent = v;
+          td.style.background = getHeatColor(v, maxVal);
+          td.style.color = getHeatTextColor(v, maxVal);
+          tr.appendChild(td);
+        });
+        
+        const totalTd = document.createElement('td');
+        totalTd.textContent = team.total;
+        tr.appendChild(totalTd);
+        
+        tbody.appendChild(tr);
+      });
+    }
+    
+    function sortHeatmap(sortType, btn) {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderHeatmap(sortType);
+    }
+    
+    function toggleHeatmap() {
+      const toggle = document.getElementById('heatmapToggle');
+      const body = document.getElementById('heatmapBody');
+      toggle.classList.toggle('open');
+      body.classList.toggle('open');
+    }
+    
     // Initialize on load
     init();
+    renderHeatmap('alpha');
   </script>
 </body>
 </html>
