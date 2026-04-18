@@ -724,27 +724,28 @@
     // Probability per minute = (Average Goals per Match) / 90
     // Updated from EPL CSV data (2014–2026, 11 seasons)
     // Probability per minute = (Total GF / Total MP) / 90
+    // bins = goals scored per 15-min period [0-15, 16-30, 31-45, 46-60, 61-75, 76-90] (2025-2026 season)
     const TEAMS = {
-      'Manchester City': { short: 'MCI', color: '#6CABDD', home: 0.0295, away: 0.0222 },
-      'Arsenal': { short: 'ARS', color: '#EF0107', home: 0.0234, away: 0.0182 },
-      'Aston Villa': { short: 'AVL', color: '#95BFE5', home: 0.0165, away: 0.0122 },
-      'Bournemouth': { short: 'BOU', color: '#DA291C', home: 0.0151, away: 0.0138 },
-      'Brentford': { short: 'BRE', color: '#E30613', home: 0.0186, away: 0.0147 },
-      'Brighton': { short: 'BHA', color: '#0057B8', home: 0.0149, away: 0.0133 },
-      'Burnley': { short: 'BUR', color: '#6C1D45', home: 0.0112, away: 0.0107 },
-      'Chelsea': { short: 'CHE', color: '#034694', home: 0.0203, away: 0.0180 },
-      'Crystal Palace': { short: 'CRY', color: '#1B458F', home: 0.0134, away: 0.0131 },
-      'Everton': { short: 'EVE', color: '#003399', home: 0.0159, away: 0.0116 },
-      'Fulham': { short: 'FUL', color: '#000000', home: 0.0147, away: 0.0121 },
-      'Leeds United': { short: 'LEE', color: '#FFCD00', home: 0.0145, away: 0.0146 },
-      'Liverpool': { short: 'LIV', color: '#C8102E', home: 0.0249, away: 0.0201 },
-      'Manchester Utd': { short: 'MUN', color: '#DA291C', home: 0.0196, away: 0.0155 },
-      'Newcastle United': { short: 'NEW', color: '#241F20', home: 0.0177, away: 0.0124 },
-      'Nottingham Forest': { short: 'NFO', color: '#DD0000', home: 0.0143, away: 0.0126 },
-      'Sunderland': { short: 'SUN', color: '#EB172B', home: 0.0119, away: 0.0096 },
-      'Tottenham Hotspur': { short: 'TOT', color: '#132257', home: 0.0209, away: 0.0186 },
-      'West Ham United': { short: 'WHU', color: '#7A263A', home: 0.0163, away: 0.0140 },
-      'Wolves': { short: 'WOL', color: '#FDB913', home: 0.0138, away: 0.0109 },
+      'Manchester City': { short: 'MCI', color: '#6CABDD', home: 0.0295, away: 0.0222, bins: [8,8,19,8,12,8] },
+      'Arsenal': { short: 'ARS', color: '#EF0107', home: 0.0234, away: 0.0182, bins: [6,5,12,14,10,15] },
+      'Aston Villa': { short: 'AVL', color: '#95BFE5', home: 0.0165, away: 0.0122, bins: [3,6,8,7,8,11] },
+      'Bournemouth': { short: 'BOU', color: '#DA291C', home: 0.0151, away: 0.0138, bins: [7,8,7,3,10,13] },
+      'Brentford': { short: 'BRE', color: '#E30613', home: 0.0186, away: 0.0147, bins: [7,6,9,5,5,16] },
+      'Brighton': { short: 'BHA', color: '#0057B8', home: 0.0149, away: 0.0133, bins: [6,4,6,6,8,13] },
+      'Burnley': { short: 'BUR', color: '#6C1D45', home: 0.0112, away: 0.0107, bins: [2,5,7,5,4,10] },
+      'Chelsea': { short: 'CHE', color: '#034694', home: 0.0203, away: 0.0180, bins: [6,6,12,13,8,8] },
+      'Crystal Palace': { short: 'CRY', color: '#1B458F', home: 0.0134, away: 0.0131, bins: [2,5,11,1,7,9] },
+      'Everton': { short: 'EVE', color: '#003399', home: 0.0159, away: 0.0116, bins: [3,7,7,5,4,13] },
+      'Fulham': { short: 'FUL', color: '#000000', home: 0.0147, away: 0.0121, bins: [6,2,7,6,9,13] },
+      'Leeds United': { short: 'LEE', color: '#FFCD00', home: 0.0145, away: 0.0146, bins: [6,4,11,5,7,6] },
+      'Liverpool': { short: 'LIV', color: '#C8102E', home: 0.0249, away: 0.0201, bins: [3,4,13,9,6,17] },
+      'Manchester Utd': { short: 'MUN', color: '#DA291C', home: 0.0196, away: 0.0155, bins: [4,7,10,11,11,14] },
+      'Newcastle United': { short: 'NEW', color: '#241F20', home: 0.0177, away: 0.0124, bins: [6,8,10,4,5,12] },
+      'Nottingham Forest': { short: 'NFO', color: '#DD0000', home: 0.0143, away: 0.0126, bins: [6,1,5,8,4,8] },
+      'Sunderland': { short: 'SUN', color: '#EB172B', home: 0.0119, away: 0.0096, bins: [1,5,4,4,10,9] },
+      'Tottenham Hotspur': { short: 'TOT', color: '#132257', home: 0.0209, away: 0.0186, bins: [3,4,9,7,6,11] },
+      'West Ham United': { short: 'WHU', color: '#7A263A', home: 0.0163, away: 0.0140, bins: [9,3,9,3,6,10] },
+      'Wolves': { short: 'WOL', color: '#FDB913', home: 0.0138, away: 0.0109, bins: [2,2,7,3,3,7] },
     };
     
     let homeTeam = 'Manchester City';
@@ -865,6 +866,25 @@
       }
     }
     
+    // Sample a goal minute using team-specific 15-min bin weights
+    // Bins: [0-15, 16-30, 31-45, 46-60, 61-75, 76-90]
+    function sampleGoalMinute(bins) {
+      const total = bins.reduce((a, b) => a + b, 0);
+      if (total === 0) return Math.random() * 90;
+      
+      // Weighted random bin selection
+      let r = Math.random() * total;
+      let binIndex = 0;
+      for (let i = 0; i < bins.length; i++) {
+        r -= bins[i];
+        if (r <= 0) { binIndex = i; break; }
+      }
+      
+      // Uniform within the selected 15-min bin
+      const binStart = binIndex * 15;
+      return binStart + Math.random() * 15;
+    }
+    
     function renderTeamBadges() {
       const container = document.getElementById('teamBadges');
       container.innerHTML = '';
@@ -878,9 +898,11 @@
       const homeGoalCount = poissonRandom(homeExpected);
       const awayGoalCount = poissonRandom(awayExpected);
       
-      // Generate random goal times, sorted
-      const homeGoalTimes = Array.from({length: homeGoalCount}, () => Math.random() * 90).sort((a, b) => a - b);
-      const awayGoalTimes = Array.from({length: awayGoalCount}, () => Math.random() * 90).sort((a, b) => a - b);
+      // Generate goal times weighted by team-specific bin distributions
+      const homeBins = TEAMS[homeTeam].bins;
+      const awayBins = TEAMS[awayTeam].bins;
+      const homeGoalTimes = Array.from({length: homeGoalCount}, () => sampleGoalMinute(homeBins)).sort((a, b) => a - b);
+      const awayGoalTimes = Array.from({length: awayGoalCount}, () => sampleGoalMinute(awayBins)).sort((a, b) => a - b);
       
       const cx = 50; // center percentage
       const cy = 50;
