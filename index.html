@@ -648,6 +648,90 @@
       width: 120px;
     }
     
+    .prediction-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .dashboard-card {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+      border-color: #cbd5e0;
+      background: #fbfdfe;
+    }
+    
+    .dashboard-card h4 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #718096;
+      margin: 0 0 12px 0;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: #4a5568;
+      font-weight: 500;
+    }
+    
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a202c;
+      min-width: 50px;
+      text-align: right;
+    }
+    
+    .scoreline-table {
+      width: 100%;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    
+    .scoreline-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .scoreline-row:last-child {
+      border-bottom: none;
+    }
+    
+    .scoreline-score {
+      font-weight: 700;
+      color: #2d3748;
+      min-width: 45px;
+    }
+    
+    .scoreline-prob {
+      color: #4299e1;
+      font-weight: 600;
+    }
+    
     .hidden {
       display: none;
     }
@@ -821,6 +905,62 @@
             <p style="text-align: center; font-size: 12px; color: #a0aec0; margin-top: 16px;">
               Based on <span id="simCount">10,000</span> Monte Carlo simulations
             </p>
+          </div>
+        </div>
+        
+        <!-- Prediction Dashboard -->
+        <div class="prediction-dashboard" id="dashboard" style="display: none;">
+          <div class="dashboard-card">
+            <h4>Match Outcome</h4>
+            <div class="stat-row">
+              <span class="stat-label" id="homeOutcomeLabel">Home Win</span>
+              <span class="stat-value" id="homeOutcomeProb">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Draw</span>
+              <span class="stat-value" id="drawOutcomeProb">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label" id="awayOutcomeLabel">Away Win</span>
+              <span class="stat-value" id="awayOutcomeProb">—</span>
+            </div>
+          </div>
+          
+          <div class="dashboard-card">
+            <h4>Goals & BTTS</h4>
+            <div class="stat-row">
+              <span class="stat-label">Over 2.5 Goals</span>
+              <span class="stat-value" id="over25Prob">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Under 2.5 Goals</span>
+              <span class="stat-value" id="under25Prob">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Both Teams Score</span>
+              <span class="stat-value" id="bttsProb">—</span>
+            </div>
+          </div>
+          
+          <div class="dashboard-card">
+            <h4>Most Likely Scorelines</h4>
+            <div class="scoreline-table" id="scorelinesList"></div>
+          </div>
+          
+          <div class="dashboard-card">
+            <h4>Score Range</h4>
+            <div class="stat-row">
+              <span class="stat-label">Most Common Home Score</span>
+              <span class="stat-value" id="commonHome">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Most Common Away Score</span>
+              <span class="stat-value" id="commonAway">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Average Total Goals</span>
+              <span class="stat-value" id="avgTotal">—</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1242,11 +1382,117 @@
         // Re-render badges for a fresh sample prediction
         renderTeamBadges();
         
+        // Update prediction dashboard
+        updatePredictionDashboard();
+        
         document.getElementById('results').style.display = 'block';
         
         btn.disabled = false;
         btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Run Simulation`;
       }, 100);
+    }
+    
+    // Monte Carlo Simulation
+    function monteCarloMatchPrediction(homeXG, awayXG, nSimulations = 10000) {
+      const simulations = [];
+      for (let i = 0; i < nSimulations; i++) {
+        const homeGoals = poissonRandom(homeXG);
+        const awayGoals = poissonRandom(awayXG);
+        simulations.push({
+          homeGoals,
+          awayGoals,
+          totalGoals: homeGoals + awayGoals,
+          outcome: homeGoals > awayGoals ? 'Home' : (homeGoals < awayGoals ? 'Away' : 'Draw'),
+          btts: homeGoals > 0 && awayGoals > 0
+        });
+      }
+      
+      // Calculate outcome probabilities
+      const homeWins = simulations.filter(s => s.outcome === 'Home').length;
+      const draws = simulations.filter(s => s.outcome === 'Draw').length;
+      const awayWins = simulations.filter(s => s.outcome === 'Away').length;
+      const over25 = simulations.filter(s => s.totalGoals > 2.5).length;
+      const bttsYes = simulations.filter(s => s.btts).length;
+      
+      // Calculate scorelines
+      const scorelineMap = {};
+      simulations.forEach(s => {
+        const key = `${s.homeGoals}-${s.awayGoals}`;
+        scorelineMap[key] = (scorelineMap[key] || 0) + 1;
+      });
+      
+      const scorelines = Object.entries(scorelineMap)
+        .map(([score, count]) => ({
+          score,
+          probability: (count / nSimulations) * 100,
+          count
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      
+      // Calculate average scores
+      const avgHomeGoals = simulations.reduce((sum, s) => sum + s.homeGoals, 0) / nSimulations;
+      const avgAwayGoals = simulations.reduce((sum, s) => sum + s.awayGoals, 0) / nSimulations;
+      const avgTotal = avgHomeGoals + avgAwayGoals;
+      
+      // Most common scores
+      const homeScoreCounts = {};
+      const awayScoreCounts = {};
+      simulations.forEach(s => {
+        homeScoreCounts[s.homeGoals] = (homeScoreCounts[s.homeGoals] || 0) + 1;
+        awayScoreCounts[s.awayGoals] = (awayScoreCounts[s.awayGoals] || 0) + 1;
+      });
+      
+      const commonHome = Object.entries(homeScoreCounts).sort((a, b) => b[1] - a[1])[0][0];
+      const commonAway = Object.entries(awayScoreCounts).sort((a, b) => b[1] - a[1])[0][0];
+      
+      return {
+        homeWinProb: (homeWins / nSimulations) * 100,
+        drawProb: (draws / nSimulations) * 100,
+        awayWinProb: (awayWins / nSimulations) * 100,
+        over25Prob: (over25 / nSimulations) * 100,
+        under25Prob: ((nSimulations - over25) / nSimulations) * 100,
+        bttsProb: (bttsYes / nSimulations) * 100,
+        scorelines,
+        commonHome: parseInt(commonHome),
+        commonAway: parseInt(commonAway),
+        avgTotal
+      };
+    }
+    
+    function updatePredictionDashboard() {
+      const homeXG = homeProbability * 90;
+      const awayXG = awayProbability * 90;
+      const results = monteCarloMatchPrediction(homeXG, awayXG, 5000);
+      
+      // Update outcome probabilities
+      document.getElementById('homeOutcomeLabel').textContent = TEAMS[homeTeam].short + ' Win';
+      document.getElementById('awayOutcomeLabel').textContent = TEAMS[awayTeam].short + ' Win';
+      document.getElementById('homeOutcomeProb').textContent = results.homeWinProb.toFixed(1) + '%';
+      document.getElementById('drawOutcomeProb').textContent = results.drawProb.toFixed(1) + '%';
+      document.getElementById('awayOutcomeProb').textContent = results.awayWinProb.toFixed(1) + '%';
+      
+      // Update goals & BTTS
+      document.getElementById('over25Prob').textContent = results.over25Prob.toFixed(1) + '%';
+      document.getElementById('under25Prob').textContent = results.under25Prob.toFixed(1) + '%';
+      document.getElementById('bttsProb').textContent = results.bttsProb.toFixed(1) + '%';
+      
+      // Update scorelines
+      const scorelinesList = document.getElementById('scorelinesList');
+      scorelinesList.innerHTML = results.scorelines.map(s => 
+        `<div class="scoreline-row">
+          <span class="scoreline-score">${s.score}</span>
+          <span class="scoreline-prob">${s.probability.toFixed(1)}%</span>
+        </div>`
+      ).join('');
+      
+      // Update score range
+      document.getElementById('commonHome').textContent = results.commonHome;
+      document.getElementById('commonAway').textContent = results.commonAway;
+      document.getElementById('avgTotal').textContent = results.avgTotal.toFixed(2);
+      
+      // Show dashboard
+      document.getElementById('dashboard').style.display = 'grid';
     }
     
     // Heatmap
